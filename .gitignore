@@ -1,0 +1,27 @@
+# Unity generated
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+build/
+Logs/
+UserSettings/
+MemoryCaptures/
+
+# Unity cache
+.utmp/
+
+# Visual Studio
+.vs/
+*.csproj
+*.sln
+*.slnx
+
+# Meta
+*.apk
+*.aab
+
+# OS
+.DS_Store
+Thumbs.db
