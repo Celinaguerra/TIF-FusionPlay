@@ -22,9 +22,13 @@ public class GameManager : MonoBehaviour
     private int nivelActual = 1;
     private int aciertosConsecutivos = 0;
 
-    // Configuracion por nivel
-    private float[] velocidades = { 3f, 4.5f, 6f, 8f };
+    // Configuracion por nivel (velocidades base mas lentas)
+    private float[] velocidades = { 0.9f, 1.2f, 1.6f, 2.2f };
     private float[] tamanios = { 0.3f, 0.25f, 0.2f, 0.15f };
+
+    private float bonusVelocidad = 0f;
+    private const float incrementoPorAcierto = 0.08f;
+    private const float velocidadMaxima = 3f;
 
     void Awake()
     {
@@ -41,6 +45,10 @@ public class GameManager : MonoBehaviour
     public void IniciarSesion()
     {
         sesionActiva = true;
+        bonusVelocidad = 0f;
+
+        if (CristalSpawner.Instance != null)
+            CristalSpawner.Instance.IniciarSpawns();
     }
 
     public bool GetSesionActiva()
@@ -58,6 +66,10 @@ public class GameManager : MonoBehaviour
         {
             tiempoRestante = 0;
             sesionActiva = false;
+
+            if (CristalSpawner.Instance != null)
+                CristalSpawner.Instance.DetenerSpawns();
+
             Debug.Log("Sesion terminada!");
         }
 
@@ -68,6 +80,7 @@ public class GameManager : MonoBehaviour
     {
         puntos++;
         aciertosConsecutivos++;
+        bonusVelocidad = Mathf.Min(bonusVelocidad + incrementoPorAcierto, velocidadMaxima);
         VerificarSubidaNivel();
         ActualizarHUD();
     }
@@ -91,7 +104,7 @@ public class GameManager : MonoBehaviour
 
     public float GetVelocidadActual()
     {
-        return velocidades[nivelActual - 1];
+        return Mathf.Min(velocidades[nivelActual - 1] + bonusVelocidad, velocidadMaxima);
     }
 
     public float GetTamanioActual()

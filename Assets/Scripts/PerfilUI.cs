@@ -50,14 +50,14 @@ public class PerfilUI : MonoBehaviour
             return;
         }
 
-        // Guardar perfil
         int edad = int.Parse(inputEdad.text);
         PerfilManager.Instance.GuardarPerfil(inputNombre.text, edad, ojoDerecho);
-        PerfilManager.Instance.AplicarPerfilAlJuego();
 
-        // Mostrar juego y ocultar perfil
         panelPerfil.SetActive(false);
         hudJuego.SetActive(true);
+
+        VRUISetup.RefrescarCanvasVR();
+        PerfilManager.Instance.AplicarPerfilAlJuego();
         GameManager.Instance.IniciarSesion();
 
         Debug.Log("✅ Perfil guardado, iniciando juego!");

@@ -3,26 +3,32 @@ using UnityEngine;
 public class CristalMovimiento : MonoBehaviour
 {
     [Header("Movimiento")]
-    public float velocidad = 5f;
-    public float distanciaDetencion = 2f;
+    public float velocidad = 1f;
+    [Tooltip("Distancia al punto destino para frenar. Usar ~0.15, NO 2.")]
+    public float distanciaDetencion = 0.15f;
 
-    [Header("Vibracion")]
-    public float intensidadVibracion = 0.05f;
-    public float frecuenciaVibracion = 10f;
+    [Header("Aceleracion progresiva")]
+    public float factorVelocidadMaxima = 1.8f;
+    public float tiempoParaVelocidadMax = 5f;
 
     [Header("Colores")]
     public Color[] colores = { Color.red, Color.blue, Color.green };
-    public float tiempoParaMostrarColor = 1f;
+    public float tiempoParaMostrarColor = 0.3f;
 
     [Header("Timer")]
-    public float tiempoLimite = 5f;
+    public float tiempoLimite = 8f;
 
-    private bool detenido = false;
+    private bool detenido;
+    private bool agarrado;
+    private Vector3 puntoDestino;
     private Vector3 posicionDetenido;
     private Color colorAsignado;
-    private float timerColor = 0f;
-    private float timerLimite = 0f;
-    private bool colorMostrado = false;
+    private float timerColor;
+    private float timerLimite;
+    private bool colorMostrado;
+    private float tiempoViaje;
+    private float velocidadBase;
+    private float velocidadActual;
     private Renderer rend;
 
     void Start()
@@ -30,73 +36,103 @@ public class CristalMovimiento : MonoBehaviour
         rend = GetComponent<Renderer>();
     }
 
+    public void ConfigurarTrayectoria(Vector3 destino)
+    {
+        puntoDestino = destino;
+    }
+
+    public void ConfigurarVelocidad(float baseVel)
+    {
+        velocidadBase = baseVel;
+        velocidadActual = baseVel * 0.4f;
+        velocidad = baseVel;
+    }
+
     void Update()
     {
+        if (agarrado)
+            return;
+
         if (!detenido)
         {
+            tiempoViaje += Time.deltaTime;
+            float progreso = Mathf.Clamp01(tiempoViaje / tiempoParaVelocidadMax);
+            float velocidadMin = velocidadBase * 0.4f;
+            float velocidadMax = velocidadBase * factorVelocidadMaxima;
+            velocidadActual = Mathf.Lerp(velocidadMin, velocidadMax, progreso);
+
             transform.position = Vector3.MoveTowards(
                 transform.position,
-                Vector3.zero,
-                velocidad * Time.deltaTime
+                puntoDestino,
+                velocidadActual * Time.deltaTime
             );
 
-            if (Vector3.Distance(transform.position, Vector3.zero) <= distanciaDetencion)
-            {
-                detenido = true;
-                posicionDetenido = transform.position;
-                AsignarColor();
-            }
+            if (Vector3.Distance(transform.position, puntoDestino) <= distanciaDetencion)
+                DetenerYAsignarColor();
+        }
+        else if (!colorMostrado)
+        {
+            timerColor += Time.deltaTime;
+            if (timerColor >= tiempoParaMostrarColor)
+                MostrarColor();
         }
         else
         {
-            Vibrar();
+            timerLimite += Time.deltaTime;
 
-            if (!colorMostrado)
+            if (timerLimite >= tiempoLimite * 0.7f)
             {
-                timerColor += Time.deltaTime;
-                if (timerColor >= tiempoParaMostrarColor)
-                {
-                    MostrarColor();
-                }
+                float parpadeo = Mathf.PingPong(Time.time * 5f, 1f);
+                AplicarColorAlRenderer(Color.Lerp(colorAsignado, Color.white, parpadeo));
             }
-            else
-            {
-                // Contar tiempo limite
-                timerLimite += Time.deltaTime;
 
-                // Efecto visual: el cristal parpadea cuando queda poco tiempo
-                if (timerLimite >= tiempoLimite * 0.7f)
-                {
-                    float parpadeo = Mathf.PingPong(Time.time * 5f, 1f);
-                    rend.material.color = Color.Lerp(colorAsignado, Color.white, parpadeo);
-                }
-
-                if (timerLimite >= tiempoLimite)
-                {
-                    Debug.Log("⏱️ Tiempo agotado - Error!");
-                    Destroy(gameObject);
-                }
-            }
+            if (timerLimite >= tiempoLimite)
+                Destroy(gameObject);
         }
     }
 
-    void Vibrar()
+    void OnDestroy()
     {
-        float offsetX = (Mathf.PerlinNoise(Time.time * frecuenciaVibracion, 0f) - 0.5f) * 2f * intensidadVibracion;
-        float offsetY = (Mathf.PerlinNoise(0f, Time.time * frecuenciaVibracion) - 0.5f) * 2f * intensidadVibracion;
-        transform.position = posicionDetenido + new Vector3(offsetX, offsetY, 0);
+        if (GameManager.Instance == null || !GameManager.Instance.GetSesionActiva())
+            return;
+
+        if (CristalSpawner.Instance != null)
+            CristalSpawner.Instance.RegistrarCristalDestruido(this);
+    }
+
+    void DetenerYAsignarColor()
+    {
+        detenido = true;
+        posicionDetenido = transform.position;
+        transform.position = posicionDetenido;
+        AsignarColor();
+
+        if (tiempoParaMostrarColor <= 0f)
+            MostrarColor();
     }
 
     void AsignarColor()
     {
         colorAsignado = colores[Random.Range(0, colores.Length)];
-        rend.material.color = Color.white;
+        AplicarColorAlRenderer(Color.white);
     }
 
     void MostrarColor()
     {
         colorMostrado = true;
-        rend.material.color = colorAsignado;
+        AplicarColorAlRenderer(colorAsignado);
+    }
+
+    void AplicarColorAlRenderer(Color color)
+    {
+        Material mat = rend.sharedMaterial;
+        if (mat == null)
+            return;
+
+        if (mat.HasProperty("_BaseColor"))
+            mat.SetColor("_BaseColor", color);
+        else
+            mat.color = color;
     }
 
     public Color GetColorAsignado()
@@ -107,5 +143,32 @@ public class CristalMovimiento : MonoBehaviour
     public bool ColorMostrado()
     {
         return colorMostrado;
+    }
+
+    public bool CanGrab()
+    {
+        return detenido && colorMostrado && !agarrado;
+    }
+
+    public void Grab()
+    {
+        if (!CanGrab())
+            return;
+
+        agarrado = true;
+    }
+
+    public void UpdateHoldPosition(Vector3 posicion)
+    {
+        if (!agarrado)
+            return;
+
+        transform.position = posicion;
+    }
+
+    public void Release()
+    {
+        agarrado = false;
+        posicionDetenido = transform.position;
     }
 }

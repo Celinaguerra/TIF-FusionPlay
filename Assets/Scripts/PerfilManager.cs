@@ -32,11 +32,15 @@ public class PerfilManager : MonoBehaviour
 
     public void AplicarPerfilAlJuego()
     {
-        // Conecta el perfil con el DichopticManager
         DichopticManager dichoptic = FindFirstObjectByType<DichopticManager>();
-        if (dichoptic != null)
+        if (dichoptic == null)
         {
-            Debug.Log("✅ Configuracion dicoptica aplicada desde perfil");
+            Debug.LogWarning("⚠️ DichopticManager no encontrado en la escena");
+            return;
         }
+
+        dichoptic.enabled = true;
+        dichoptic.AplicarDichopticAlJuego();
+        Debug.Log("✅ Configuración dicóptica programada desde perfil");
     }
 }
