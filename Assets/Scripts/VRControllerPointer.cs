@@ -11,6 +11,8 @@ public class VRControllerPointer : MonoBehaviour, OVRInputModule.InputSource
     {
         if (laser == null)
             laser = CrearLaser();
+
+        CrearMarcadorOrigen();
     }
 
     void OnEnable()
@@ -46,6 +48,33 @@ public class VRControllerPointer : MonoBehaviour, OVRInputModule.InputSource
         line.startColor = mat.color;
         line.endColor = mat.color;
         return line;
+    }
+
+    void CrearMarcadorOrigen()
+    {
+        if (laser == null || laser.transform.Find("LaserOrigin") != null)
+            return;
+
+        GameObject marcador = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        marcador.name = "LaserOrigin";
+        marcador.transform.SetParent(laser.transform, false);
+        marcador.transform.localPosition = Vector3.zero;
+        marcador.transform.localScale = Vector3.one * 0.025f;
+        Destroy(marcador.GetComponent<Collider>());
+
+        Material mat = new Material(Shader.Find("Sprites/Default"));
+        mat.color = controller == OVRInput.Controller.LTouch
+            ? new Color(0.2f, 0.7f, 1f, 0.9f)
+            : new Color(1f, 0.4f, 0.2f, 0.9f);
+
+        Renderer renderer = marcador.GetComponent<Renderer>();
+        if (renderer != null)
+            renderer.material = mat;
+    }
+
+    public void AsegurarMarcadorOrigen()
+    {
+        CrearMarcadorOrigen();
     }
 
     public bool IsPressed()

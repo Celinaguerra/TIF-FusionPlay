@@ -16,6 +16,8 @@ public class PerfilUI : MonoBehaviour
     public GameObject panelPerfil;
     public GameObject hudJuego;
 
+    Contenedor[] contenedoresJuego;
+
     private bool ojoDerecho = true;
     private TextMeshProUGUI textoBotonOjo;
 
@@ -25,8 +27,24 @@ public class PerfilUI : MonoBehaviour
         botonOjoDominante.onClick.AddListener(CambiarOjoDominante);
         botonGuardar.onClick.AddListener(GuardarYJugar);
 
-        // Ocultar HUD hasta que empiece el juego
         hudJuego.SetActive(false);
+        OcultarContenedores();
+    }
+
+    void OcultarContenedores()
+    {
+        contenedoresJuego = FindObjectsByType<Contenedor>(FindObjectsSortMode.None);
+        foreach (Contenedor contenedor in contenedoresJuego)
+            contenedor.gameObject.SetActive(false);
+    }
+
+    void MostrarContenedores()
+    {
+        if (contenedoresJuego == null)
+            contenedoresJuego = FindObjectsByType<Contenedor>(FindObjectsSortMode.None);
+
+        foreach (Contenedor contenedor in contenedoresJuego)
+            contenedor.gameObject.SetActive(true);
     }
 
     void CambiarOjoDominante()
@@ -55,6 +73,11 @@ public class PerfilUI : MonoBehaviour
 
         panelPerfil.SetActive(false);
         hudJuego.SetActive(true);
+        MostrarContenedores();
+
+        VRUISetup setup = FindAnyObjectByType<VRUISetup>();
+        if (setup != null)
+            setup.ReaplicarHUD();
 
         VRUISetup.RefrescarCanvasVR();
         PerfilManager.Instance.AplicarPerfilAlJuego();

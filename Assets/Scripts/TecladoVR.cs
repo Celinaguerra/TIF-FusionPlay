@@ -46,6 +46,15 @@ public class TecladoVR : MonoBehaviour
         tecladoRaiz.SetActive(false);
     }
 
+    public void AplicarPosicionVertical()
+    {
+        if (tecladoRaiz == null)
+            return;
+
+        RectTransform raizRect = tecladoRaiz.GetComponent<RectTransform>();
+        raizRect.anchoredPosition = new Vector2(0f, posicionVertical);
+    }
+
     void BuscarReferencias()
     {
         PerfilUI perfil = GetComponent<PerfilUI>();

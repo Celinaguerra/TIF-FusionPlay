@@ -5,6 +5,10 @@ using UnityEngine.XR.Management;
 [DefaultExecutionOrder(-100)]
 public class VRHeadTrackingSetup : MonoBehaviour
 {
+    [Header("Posicion del jugador (spawn)")]
+    [Tooltip("Desplaza el rig al iniciar. Y=arriba, Z=adelante.")]
+    public Vector3 offsetPosicionJugador = new Vector3(0f, 0.15f, 0.25f);
+
     void Awake()
     {
         ConfigurarStereoOculus();
@@ -28,7 +32,7 @@ public class VRHeadTrackingSetup : MonoBehaviour
 
     void FijarPosicionInicialRig()
     {
-        transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        transform.SetPositionAndRotation(offsetPosicionJugador, Quaternion.identity);
     }
 
     void DisableStaticCameras()

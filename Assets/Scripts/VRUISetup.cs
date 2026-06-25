@@ -7,9 +7,22 @@ public class VRUISetup : MonoBehaviour
 {
     [Header("Perfil")]
     public float escalaCanvasPerfil = 0.004f;
-    public Vector3 offsetPerfil = new Vector3(0f, -0.05f, 1.5f);
+    public Vector3 offsetPerfil = new Vector3(0f, -0.05f, 1.9f);
     [Tooltip("Sube los campos del formulario en pixeles.")]
     public float offsetFormularioY = 70f;
+    [Tooltip("Sube el teclado VR en pixeles del panel (mas alto = mas arriba).")]
+    public float offsetTecladoY = 200f;
+
+    [Header("HUD juego")]
+    [Tooltip("Posicion del canvas HUD respecto a la cara. Z mas alto = mas lejos.")]
+    public Vector3 offsetHUD = new Vector3(0f, 0.15f, 1.5f);
+    [Tooltip("Sube nivel, tiempo y puntos en pixeles del canvas.")]
+    public float offsetHUDTextosY = 120f;
+
+    void Awake()
+    {
+        LimpiarEsferasManoObsoletas();
+    }
 
     void Start()
     {
@@ -85,8 +98,12 @@ public class VRUISetup : MonoBehaviour
         if (panel == null)
             return;
 
-        if (panel.GetComponent<TecladoVR>() == null)
-            panel.AddComponent<TecladoVR>();
+        TecladoVR teclado = panel.GetComponent<TecladoVR>();
+        if (teclado == null)
+            teclado = panel.AddComponent<TecladoVR>();
+
+        teclado.posicionVertical = offsetTecladoY;
+        teclado.AplicarPosicionVertical();
     }
 
     void ConfigurarCanvasHUD()
@@ -96,6 +113,44 @@ public class VRUISetup : MonoBehaviour
             return;
 
         PrepararCanvas(canvas);
+
+        VRUIPositioner posicionador = canvas.GetComponent<VRUIPositioner>();
+        if (posicionador == null)
+            posicionador = canvas.gameObject.AddComponent<VRUIPositioner>();
+
+        posicionador.offsetLocal = offsetHUD;
+        posicionador.AplicarPosicion();
+        SubirTextosHUD(canvas.transform);
+    }
+
+    public void ReaplicarHUD()
+    {
+        Canvas canvas = GameObject.Find("HUD")?.GetComponent<Canvas>();
+        if (canvas == null)
+            return;
+
+        VRUIPositioner posicionador = canvas.GetComponent<VRUIPositioner>();
+        if (posicionador == null)
+            return;
+
+        posicionador.offsetLocal = offsetHUD;
+        posicionador.AplicarPosicion();
+    }
+
+    void SubirTextosHUD(Transform canvas)
+    {
+        string[] nombres = { "TextPuntos", "TextTiempo", "TextNivel" };
+
+        foreach (string nombre in nombres)
+        {
+            Transform hijo = canvas.Find(nombre);
+            if (hijo == null)
+                continue;
+
+            RectTransform rect = hijo.GetComponent<RectTransform>();
+            if (rect != null)
+                rect.anchoredPosition += new Vector2(0f, offsetHUDTextosY);
+        }
     }
 
     void PrepararCanvas(Canvas canvas)
@@ -157,20 +212,25 @@ public class VRUISetup : MonoBehaviour
             return;
         }
 
-        if (ancla.GetComponent<VRControllerPointer>() != null)
+        VRControllerPointer existente = ancla.GetComponent<VRControllerPointer>();
+        if (existente != null)
+        {
+            existente.AsegurarMarcadorOrigen();
             return;
+        }
 
         VRControllerPointer puntero = ancla.gameObject.AddComponent<VRControllerPointer>();
         puntero.controller = controller;
+    }
 
-        if (ancla.Find("ControllerVisual") == null)
+    void LimpiarEsferasManoObsoletas()
+    {
+        foreach (Transform hijo in GetComponentsInChildren<Transform>(true))
         {
-            GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            visual.name = "ControllerVisual";
-            visual.transform.SetParent(ancla, false);
-            visual.transform.localPosition = Vector3.zero;
-            visual.transform.localScale = Vector3.one * 0.08f;
-            Destroy(visual.GetComponent<Collider>());
+            if (hijo.name != "ControllerVisual" && hijo.name != "LaserOrigin")
+                continue;
+
+            Destroy(hijo.gameObject);
         }
     }
 
