@@ -18,12 +18,12 @@ public class Contenedor : MonoBehaviour
                 if (ColoresIguales(colorCristal, colorContenedor))
                 {
                     Debug.Log("✅ Acierto!");
-                    GameManager.Instance.SumarPunto();
+                    GameManager.Instance.RegistrarAcierto();
                 }
                 else
                 {
                     Debug.Log("❌ Error!");
-                    GameManager.Instance.RestarPunto();
+                    GameManager.Instance.RegistrarError();
                 }
 
                 Destroy(other.gameObject);

@@ -13,6 +13,9 @@ public class PerfilManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            if (GetComponent<HistorialSesionesManager>() == null)
+                gameObject.AddComponent<HistorialSesionesManager>();
         }
         else
         {

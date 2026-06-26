@@ -50,6 +50,9 @@ public class CristalMovimiento : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null && GameManager.Instance.EstaPausada())
+            return;
+
         if (agarrado)
             return;
 

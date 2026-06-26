@@ -240,9 +240,10 @@ public class TecladoVR : MonoBehaviour
         tecladoRaiz.SetActive(true);
     }
 
-    void OcultarTeclado()
+    public void OcultarTeclado()
     {
-        tecladoRaiz.SetActive(false);
+        if (tecladoRaiz != null)
+            tecladoRaiz.SetActive(false);
 
         if (EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(null);

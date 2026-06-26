@@ -50,9 +50,36 @@ public class CristalSpawner : MonoBehaviour
         timerEspera = 0f;
     }
 
+    public void ReanudarSpawns()
+    {
+        spawnsActivos = true;
+        SincronizarCristalActivo();
+    }
+
     public void DetenerSpawns()
     {
         spawnsActivos = false;
+    }
+
+    public void LimpiarCristales()
+    {
+        spawnsActivos = false;
+        cristalActivo = null;
+        timerEspera = 0f;
+
+        CristalMovimiento[] cristales = FindObjectsByType<CristalMovimiento>(FindObjectsSortMode.None);
+        foreach (CristalMovimiento cristal in cristales)
+            Destroy(cristal.gameObject);
+    }
+
+    void SincronizarCristalActivo()
+    {
+        if (cristalActivo != null)
+            return;
+
+        CristalMovimiento[] cristales = FindObjectsByType<CristalMovimiento>(FindObjectsSortMode.None);
+        if (cristales.Length > 0)
+            cristalActivo = cristales[0];
     }
 
     public void RegistrarCristalDestruido(CristalMovimiento cristal)

@@ -117,7 +117,20 @@ public class DichopticManager : MonoBehaviour
 
         ConfigurarCamara(rig.leftEyeAnchor.GetComponent<Camera>(), StereoTargetEyeMask.Left);
         ConfigurarCamara(rig.rightEyeAnchor.GetComponent<Camera>(), StereoTargetEyeMask.Right);
-        ConfigurarCamara(rig.centerEyeAnchor.GetComponent<Camera>(), StereoTargetEyeMask.Both);
+        DeshabilitarCamaraCentro();
+    }
+
+    void DeshabilitarCamaraCentro()
+    {
+        if (rig == null)
+            return;
+
+        Camera centro = rig.centerEyeAnchor.GetComponent<Camera>();
+        if (centro == null)
+            return;
+
+        centro.stereoTargetEye = StereoTargetEyeMask.None;
+        centro.enabled = false;
     }
 
     void ConfigurarCamara(Camera camara, StereoTargetEyeMask ojo)

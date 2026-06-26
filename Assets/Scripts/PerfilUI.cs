@@ -29,6 +29,11 @@ public class PerfilUI : MonoBehaviour
 
         hudJuego.SetActive(false);
         OcultarContenedores();
+
+        RectTransform hudRect = hudJuego.GetComponent<RectTransform>();
+        RectTransform panelRect = panelPerfil.GetComponent<RectTransform>();
+        if (GameManager.Instance != null)
+            GameManager.Instance.ConfigurarUI(hudRect, panelRect);
     }
 
     void OcultarContenedores()
@@ -75,14 +80,53 @@ public class PerfilUI : MonoBehaviour
         hudJuego.SetActive(true);
         MostrarContenedores();
 
+        RectTransform hudRect = hudJuego.GetComponent<RectTransform>();
+        RectTransform panelRect = panelPerfil.GetComponent<RectTransform>();
+
         VRUISetup setup = FindAnyObjectByType<VRUISetup>();
         if (setup != null)
+        {
             setup.ReaplicarHUD();
+            setup.PrepararHUDInteractivo();
+        }
 
         VRUISetup.RefrescarCanvasVR();
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ConfigurarUI(hudRect, panelRect);
+        }
         PerfilManager.Instance.AplicarPerfilAlJuego();
         GameManager.Instance.IniciarSesion();
 
         Debug.Log("✅ Perfil guardado, iniciando juego!");
+    }
+
+    public void VolverAlMenuInicial()
+    {
+        if (hudJuego != null)
+            hudJuego.SetActive(false);
+
+        if (panelPerfil != null)
+            panelPerfil.SetActive(true);
+
+        OcultarContenedores();
+
+        DichopticManager dichoptic = FindFirstObjectByType<DichopticManager>();
+        if (dichoptic != null)
+            dichoptic.RestaurarVistaMenu();
+
+        SesionUI sesionUI = FindFirstObjectByType<SesionUI>();
+        if (sesionUI != null)
+            sesionUI.RestaurarMenuPerfil();
+
+        VRUISetup setup = FindAnyObjectByType<VRUISetup>();
+        if (setup != null)
+            setup.RestaurarMenuPerfil();
+        else
+            VRUISetup.RefrescarCanvasVR();
+
+        VRHeadTrackingSetup headSetup = FindAnyObjectByType<VRHeadTrackingSetup>();
+        if (headSetup != null)
+            headSetup.ReaplicarPosicionSpawn();
     }
 }

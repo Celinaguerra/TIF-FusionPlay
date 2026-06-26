@@ -19,6 +19,9 @@ public class VRControllerGrabber : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null && !GameManager.Instance.GetSesionActiva())
+            return;
+
         bool mantieneAgarre = BotonAgarrePresionado();
 
         if (cristalAgarrado != null)
@@ -72,17 +75,13 @@ public class VRControllerGrabber : MonoBehaviour
     bool BotonAgarrePresionado()
     {
         return OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, controller)
-            || OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, controller)
-            || OVRInput.Get(OVRInput.Button.One, controller)
-            || OVRInput.Get(OVRInput.Button.Two, controller);
+            || OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, controller);
     }
 
     bool BotonAgarreIniciado()
     {
         return OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, controller)
-            || OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger, controller)
-            || OVRInput.GetDown(OVRInput.Button.One, controller)
-            || OVRInput.GetDown(OVRInput.Button.Two, controller);
+            || OVRInput.GetDown(OVRInput.Button.PrimaryHandTrigger, controller);
     }
 
     CristalMovimiento BuscarCristalCercano()

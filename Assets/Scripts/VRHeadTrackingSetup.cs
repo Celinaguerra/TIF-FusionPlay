@@ -7,7 +7,7 @@ public class VRHeadTrackingSetup : MonoBehaviour
 {
     [Header("Posicion del jugador (spawn)")]
     [Tooltip("Desplaza el rig al iniciar. Y=arriba, Z=adelante.")]
-    public Vector3 offsetPosicionJugador = new Vector3(0f, 0.15f, 0.25f);
+    public Vector3 offsetPosicionJugador = new Vector3(0f, 0.7f, 0.9f);
 
     void Awake()
     {
@@ -33,6 +33,11 @@ public class VRHeadTrackingSetup : MonoBehaviour
     void FijarPosicionInicialRig()
     {
         transform.SetPositionAndRotation(offsetPosicionJugador, Quaternion.identity);
+    }
+
+    public void ReaplicarPosicionSpawn()
+    {
+        FijarPosicionInicialRig();
     }
 
     void DisableStaticCameras()

@@ -121,6 +121,7 @@ public class VRUISetup : MonoBehaviour
         posicionador.offsetLocal = offsetHUD;
         posicionador.AplicarPosicion();
         SubirTextosHUD(canvas.transform);
+        DesactivarRaycastEnTextosHUD(canvas.transform);
     }
 
     public void ReaplicarHUD()
@@ -158,12 +159,75 @@ public class VRUISetup : MonoBehaviour
         AsignarCamaraCanvas(canvas);
         AsegurarLayerUI(canvas.gameObject);
 
-        GraphicRaycaster grafico = canvas.GetComponent<GraphicRaycaster>();
-        if (grafico != null)
-            grafico.enabled = false;
+        GraphicRaycaster[] raycasters = canvas.GetComponents<GraphicRaycaster>();
+        foreach (GraphicRaycaster raycaster in raycasters)
+        {
+            if (raycaster is OVRRaycaster ovrRaycaster)
+            {
+                ovrRaycaster.enabled = true;
+                continue;
+            }
+
+            raycaster.enabled = false;
+        }
 
         if (canvas.GetComponent<OVRRaycaster>() == null)
             canvas.gameObject.AddComponent<OVRRaycaster>();
+    }
+
+    public void PrepararHUDInteractivo()
+    {
+        Canvas canvas = GameObject.Find("HUD")?.GetComponent<Canvas>();
+        if (canvas == null)
+            return;
+
+        PrepararCanvas(canvas);
+        DesactivarRaycastEnTextosHUD(canvas.transform);
+        AsegurarLayerUI(canvas.gameObject);
+    }
+
+    void DesactivarRaycastEnTextosHUD(Transform canvas)
+    {
+        string[] nombres = { "TextPuntos", "TextTiempo", "TextNivel" };
+
+        foreach (string nombre in nombres)
+        {
+            Transform hijo = canvas.Find(nombre);
+            if (hijo == null)
+                continue;
+
+            Graphic grafico = hijo.GetComponent<Graphic>();
+            if (grafico != null)
+                grafico.raycastTarget = false;
+        }
+    }
+
+    public void RestaurarMenuPerfil()
+    {
+        ConfigurarEventSystem();
+
+        Canvas canvasHud = GameObject.Find("HUD")?.GetComponent<Canvas>();
+        if (canvasHud != null)
+        {
+            OVRRaycaster raycasterHud = canvasHud.GetComponent<OVRRaycaster>();
+            if (raycasterHud != null)
+                raycasterHud.enabled = false;
+        }
+
+        Canvas canvasPerfil = GameObject.Find("CanvasPerfil")?.GetComponent<Canvas>();
+        if (canvasPerfil != null)
+            PrepararCanvas(canvasPerfil);
+
+        GameObject panel = GameObject.Find("PanelPerfil");
+        if (panel != null)
+        {
+            TecladoVR teclado = panel.GetComponent<TecladoVR>();
+            if (teclado != null)
+                teclado.OcultarTeclado();
+        }
+
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(null);
     }
 
     public static void RefrescarCanvasVR()
@@ -174,19 +238,58 @@ public class VRUISetup : MonoBehaviour
             if (canvas.renderMode != RenderMode.WorldSpace)
                 continue;
 
-            canvas.worldCamera = null;
             AsegurarLayerUI(canvas.gameObject);
+            AsegurarRaycasterCanvas(canvas);
         }
     }
 
     static void AsignarCamaraCanvas(Canvas canvas)
     {
-        canvas.worldCamera = null;
         AsegurarLayerUI(canvas.gameObject);
+        AsegurarRaycasterCanvas(canvas);
+    }
+
+    static void AsegurarRaycasterCanvas(Canvas canvas)
+    {
+        OVRRaycaster raycaster = canvas.GetComponent<OVRRaycaster>();
+        if (raycaster == null)
+            return;
+
+        AsignarCamaraReferenciaUI(canvas);
+        raycaster.enabled = canvas.gameObject.activeInHierarchy;
+    }
+
+    static void AsignarCamaraReferenciaUI(Canvas canvas)
+    {
+        OVRCameraRig rig = Object.FindAnyObjectByType<OVRCameraRig>();
+        if (rig == null)
+        {
+            canvas.worldCamera = null;
+            return;
+        }
+
+        Camera centro = rig.centerEyeAnchor.GetComponent<Camera>();
+        if (centro == null)
+        {
+            canvas.worldCamera = null;
+            return;
+        }
+
+        centro.stereoTargetEye = StereoTargetEyeMask.None;
+        centro.enabled = false;
+        canvas.worldCamera = centro;
     }
 
     static void AsegurarLayerUI(GameObject objeto)
     {
+        AsegurarLayerEnArbol(objeto);
+    }
+
+    public static void AsegurarLayerEnArbol(GameObject objeto)
+    {
+        if (objeto == null)
+            return;
+
         int layerUI = LayerMask.NameToLayer("UI");
         if (layerUI == -1)
             return;
@@ -194,7 +297,7 @@ public class VRUISetup : MonoBehaviour
         objeto.layer = layerUI;
 
         foreach (Transform hijo in objeto.transform)
-            AsegurarLayerUI(hijo.gameObject);
+            AsegurarLayerEnArbol(hijo.gameObject);
     }
 
     void ConfigurarPunteros()
